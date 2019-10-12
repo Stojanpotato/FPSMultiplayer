@@ -41,6 +41,7 @@ void ASCharacter::EndCrouch()
 	UnCrouch();
 }
 
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
@@ -61,7 +62,16 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	
 	PlayerInputComponent->BindAction("Crouch",IE_Pressed ,this, &ASCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch",IE_Released, this, &ASCharacter::EndCrouch);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 
+}
+
+FVector ASCharacter::GetPawnViewLocation() const
+{
+	if (CameraComp) {
+		return CameraComp->GetComponentLocation();
+	}
+	return Super::GetPawnViewLocation();
 }
 
 void ASCharacter::MoveForward(float Value)
