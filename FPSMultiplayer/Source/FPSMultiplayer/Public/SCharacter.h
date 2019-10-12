@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class ASWeapon;
 
 UCLASS()
 class FPSMULTIPLAYER_API ASCharacter : public ACharacter
@@ -33,6 +34,32 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* SpringArmComp;
+
+	bool bWantToZoom;
+
+	UPROPERTY(EditDefaultsOnly,Category="Player")
+	float ZoomedFOV;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player",meta=(ClampMin=0.1,ClampMax=100))
+	float ZoomInterpSpeed;
+	
+	// Default Field of view set during begin play
+	float DefaultFOV;
+
+	void BeginZoom();
+
+	void EndZoom();
+
+	ASWeapon* CurrentWeapon;
+
+	UPROPERTY(EditDefaultsOnly,Category="Player")
+	TSubclassOf<ASWeapon> StarterWeaponClass;
+	
+	void Fire();
+
+	UPROPERTY(VisibleDefaultsOnly,Category="Player")
+	FName WeaponAttachSocketName;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
