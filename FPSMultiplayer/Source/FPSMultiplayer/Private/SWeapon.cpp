@@ -28,6 +28,13 @@ ASWeapon::ASWeapon()
 	RateOfFire = 600;
 }
 
+void ASWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TimeBetweenShots =( 60 / RateOfFire);
+}
+
 void ASWeapon::Fire()
 {
 	//Trace the world,from pawn eyes to crosshair location(center of the screen)
@@ -55,12 +62,13 @@ void ASWeapon::Fire()
 
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-			UGameplayStatics::ApplyPointDamage(HitActor, BaseDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+			
 		
 			float ActualDamage = BaseDamage;
 			if (SurfaceType == SurfaceType2) {
 				ActualDamage *= 4.0f;
 			}
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
 			UParticleSystem* SelectedEffect = nullptr;
 			switch (SurfaceType) {
@@ -73,7 +81,7 @@ void ASWeapon::Fire()
 				break;
 			}
 			if (SelectedEffect) {//check so that the engine doesnt crash
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			}
 
 			TracerEndPoint = Hit.ImpactPoint;
@@ -83,7 +91,7 @@ void ASWeapon::Fire()
 	}
 		PlayFireEffects(TracerEndPoint);
 
-		float LastFireTime=GetWorld()->TimeSeconds;
+		LastFireTime=GetWorld()->TimeSeconds;
 
 	}
 
@@ -102,12 +110,6 @@ void ASWeapon::StopFire()
 	GetWorldTimerManager().ClearTimer(TimeHandle_TimeBetweenShots);
 }
 
-void ASWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-
-	TimeBetweenShots = 60 / RateOfFire;
-}
 
 void ASWeapon::PlayFireEffects(FVector TraceEnd)
 {
