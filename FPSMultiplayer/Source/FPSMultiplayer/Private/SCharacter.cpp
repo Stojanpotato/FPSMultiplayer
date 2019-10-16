@@ -77,6 +77,11 @@ void ASCharacter::Fire()
 	}
 }
 
+void ASCharacter::StopFire()
+{
+	if (CurrentWeapon) { CurrentWeapon->StopFire(); }
+}
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
@@ -108,6 +113,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ASCharacter::EndZoom);
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASCharacter::Fire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StopFire);
 
 }
 

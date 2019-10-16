@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "SWeapon.generated.h"
 
+//#define SURFACE_FLESHDEFAULT	 SurfaceType1;
+//define SURFACE_FLESHVULNARABLE  SurfaceType2;
+
 class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
@@ -21,6 +24,7 @@ public:
 
 protected:
 
+	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category ="Components")
 	USkeletalMeshComponent* MeshComp;
@@ -43,17 +47,34 @@ protected:
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		UParticleSystem*  ImpactEffect;
+		UParticleSystem*  ImpactEffect;//default impact effect
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		UParticleSystem*  FleshImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		UParticleSystem*  TracerEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<UCameraShake> FireCamShake;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float BaseDamage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float RateOfFire;//bullets per minute fired
+
+	float LastFireTime;
+
+	float TimeBetweenShots;
+
+	FTimerHandle TimeHandle_TimeBetweenShots;
 public:	
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		virtual void Fire();
+	virtual void Fire();
+
+	void StartFire();
+
+	void StopFire();
 
 	
 	
