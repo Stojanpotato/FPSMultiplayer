@@ -9,6 +9,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug lines for the weapons."),ECVF_Cheat);//this is a console variable
@@ -26,6 +27,32 @@ ASWeapon::ASWeapon()
 
 	BaseDamage = 20.0f;
 	RateOfFire = 600;
+
+	SetReplicates(true);
+
+	NetUpdateFrequency = 66.0f;
+	MinNetUpdateFrequency = 33.0f;
+
+}
+
+void ASWeapon::PlayImpactEffects(EPhysicalSurface SurfaceType,FVector ImpactPoint)
+{
+	UParticleSystem* SelectedEffect = nullptr;
+	switch (SurfaceType) {
+	case  SurfaceType1:
+	case  SurfaceType2:
+		SelectedEffect = FleshImpactEffect;
+		break;
+	default:
+		SelectedEffect = ImpactEffect;
+		break;
+	}
+	if (SelectedEffect) {//check so that the engine doesnt crash
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		FVector ShotDirection = ImpactPoint - MuzzleLocation;
+		ShotDirection.Normalize();
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, ImpactPoint, ShotDirection.Rotation());
+	}
 }
 
 void ASWeapon::BeginPlay()
@@ -35,9 +62,21 @@ void ASWeapon::BeginPlay()
 	TimeBetweenShots =( 60 / RateOfFire);
 }
 
+void ASWeapon::OnRep_HitScanTrace()
+{
+	//Play cosmetic FX
+	PlayFireEffects(HitScanTrace.TraceTo);
+	PlayImpactEffects(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
+}
+
 void ASWeapon::Fire()
 {
 	//Trace the world,from pawn eyes to crosshair location(center of the screen)
+
+	if (Role < ROLE_Authority) {
+		ServerFire();
+	}
+
 	AActor* MyOwner = GetOwner();
 	if (MyOwner) {
 		FVector EyeLocation;
@@ -55,6 +94,8 @@ void ASWeapon::Fire()
 
 		FVector TracerEndPoint = TraceEnd;
 
+		EPhysicalSurface SurfaceType = SurfaceType_Default;
+
 		FHitResult Hit;
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_GameTraceChannel1, QueryParams)) {//gametracechannel1 my own custom channel
 			//Blocking hit!Process damage.
@@ -70,26 +111,20 @@ void ASWeapon::Fire()
 			}
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-			UParticleSystem* SelectedEffect = nullptr;
-			switch (SurfaceType) {
-			case  SurfaceType1:
-			case  SurfaceType2:
-				SelectedEffect = FleshImpactEffect;
-				break;
-			default:
-				SelectedEffect = ImpactEffect;
-				break;
-			}
-			if (SelectedEffect) {//check so that the engine doesnt crash
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
-			}
+			PlayImpactEffects(SurfaceType, Hit.ImpactPoint);
 
 			TracerEndPoint = Hit.ImpactPoint;
+
 		}
 		if (DebugWeaponDrawing>0){
 			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 10.0f, 10.0f);
 	}
 		PlayFireEffects(TracerEndPoint);
+
+		if (Role == ROLE_Authority) {
+			HitScanTrace.TraceTo = TracerEndPoint;
+			HitScanTrace.SurfaceType = SurfaceType;
+		}
 
 		LastFireTime=GetWorld()->TimeSeconds;
 
@@ -110,6 +145,13 @@ void ASWeapon::StopFire()
 	GetWorldTimerManager().ClearTimer(TimeHandle_TimeBetweenShots);
 }
 
+
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ASWeapon::ServerFire_Validate() { return true; }
 
 void ASWeapon::PlayFireEffects(FVector TraceEnd)
 {
@@ -133,6 +175,11 @@ void ASWeapon::PlayFireEffects(FVector TraceEnd)
 			PC->ClientPlayCameraShake(FireCamShake);
 		}
 	}
+}
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
 }
 
 

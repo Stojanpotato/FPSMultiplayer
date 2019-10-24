@@ -13,6 +13,20 @@ class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
 
+//Contains information of a single hitscan linetrace.
+USTRUCT()
+struct FHitScanTrace {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+		TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+
+};
+
 UCLASS()
 class FPSMULTIPLAYER_API ASWeapon : public AActor
 {
@@ -24,12 +38,15 @@ public:
 
 protected:
 
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
+
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category ="Components")
 	USkeletalMeshComponent* MeshComp;
 
-
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerFire();
 
 	void PlayFireEffects(FVector TraceEnd);
 
@@ -69,6 +86,14 @@ protected:
 	float TimeBetweenShots;
 
 	FTimerHandle TimeHandle_TimeBetweenShots;
+
+	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)//triggers a function every time it is used
+		FHitScanTrace HitScanTrace;
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&OutLifetimeProps) const;
 public:	
 	virtual void Fire();
 

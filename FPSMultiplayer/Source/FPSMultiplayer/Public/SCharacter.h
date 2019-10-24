@@ -51,6 +51,7 @@ protected:
 
 	void EndZoom();
 
+	UPROPERTY(Replicated)
 	ASWeapon* CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly,Category="Player")
@@ -69,8 +70,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USHealthComponent* HealthComp;
 
-	UPROPERTY(BlueprintReadOnly,Category="Player")
+	UPROPERTY(Replicated,BlueprintReadOnly,Category="Player")
 	bool bDied;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&OutLifetimeProps) const;
 
 public:	
 	// Called every frame
