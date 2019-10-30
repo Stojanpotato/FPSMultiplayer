@@ -13,6 +13,13 @@ USHealthComponent::USHealthComponent()
 }
 
 
+void USHealthComponent::Heal(float HealAmount)
+{
+	if (HealAmount <= 0.0f || Health <= 0.0f) { return; }
+	Health = FMath::Clamp(Health + HealAmount, 0.0f, DefaultHealth);
+	OnHealthChanged.Broadcast(this, Health,-HealAmount, nullptr,nullptr,nullptr);
+}
+
 // Called when the game starts
 void USHealthComponent::BeginPlay()
 {
