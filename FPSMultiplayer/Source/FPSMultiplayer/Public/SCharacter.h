@@ -57,9 +57,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly,Category="Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
 	
-	void StartFire();//start fire
-
-	void StopFire();
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -83,4 +80,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+		void StartFire();//start fire
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+		void StopFire();
 };
