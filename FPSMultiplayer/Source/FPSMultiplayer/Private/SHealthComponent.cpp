@@ -4,6 +4,18 @@
 #include"Net/UnrealNetwork.h"
 #include "SGameMode.h"
 
+bool USHealthComponent::IsFriendly(AActor* ActorA,AActor* ActorB)
+{
+	if (ActorA == nullptr || ActorB == nullptr) { return true; }//assume friendly
+	
+	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::StaticClass()));
+	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::StaticClass()));
+
+	if (HealthCompA == nullptr || HealthCompB == nullptr) { return true; }//assume friendly
+
+	return HealthCompA->TeamNum == HealthCompB->TeamNum;
+}
+
 // Sets default values for this component's properties
 USHealthComponent::USHealthComponent()
 {
@@ -12,6 +24,7 @@ USHealthComponent::USHealthComponent()
 	DefaultHealth = 100;
 	SetIsReplicated(true);
 	bIsDead = false;
+	TeamNum = 255;
 }
 
 
@@ -52,6 +65,8 @@ void USHealthComponent::OnRep_Health(float OldHealth)
 void USHealthComponent::HandleTakeAnyDamage(AActor * DamagedActor, float Damage, const UDamageType * DamageType, AController * InstigatedBy, AActor * DamageCauser)
 {
 	if (Damage <= 0.0f || bIsDead) { return;}
+
+	if (DamageCauser !=DamagedActor && IsFriendly(DamagedActor, DamageCauser)) { return; }
 
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
 

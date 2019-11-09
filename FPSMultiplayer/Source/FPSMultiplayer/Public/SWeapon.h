@@ -90,6 +90,10 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)//triggers a function every time it is used
 		FHitScanTrace HitScanTrace;
 
+	//Bullet spread in degrees
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon",meta=(ClampMin=0.0f))
+	float BulletSpread;
+
 	UFUNCTION()
 	void OnRep_HitScanTrace();
 
