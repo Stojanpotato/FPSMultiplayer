@@ -27,6 +27,9 @@ protected:
 	void BeginCrouch();
 	void EndCrouch();
 
+	void WeaponEquip(TSubclassOf<ASWeapon> Weapon);
+	void SwitchWeapon();
+
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
@@ -57,9 +60,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly,Category="Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	TSubclassOf<ASWeapon> SecondaryWeaponClass;
 
 	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	UPROPERTY(VisibleDefaultsOnly,Category="Player")
 	FName WeaponAttachSocketName;
@@ -72,6 +77,7 @@ protected:
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&OutLifetimeProps) const;
 
+	bool WeaponCheck;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
